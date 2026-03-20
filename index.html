@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nreservi × Nomod — Test Intégration</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --success: #00d68f;
+    --warning: #ffaa00;
+    --error: #ff3860;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --card: #13131c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(108,99,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .header-text h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .header-text p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .badge {
+    margin-left: auto;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid;
+  }
+
+  .badge-test {
+    color: var(--warning);
+    border-color: rgba(255,170,0,0.3);
+    background: rgba(255,170,0,0.08);
+  }
+
+  /* Section title */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  /* Form Grid */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .form-grid .full { grid-column: 1 / -1; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  input, select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+  }
+
+  select option { background: var(--surface); }
+
+  /* API Key field */
+  .api-key-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .api-key-row input { flex: 1; font-size: 12px; letter-spacing: 1px; }
+
+  /* Endpoints toggle */
+  .endpoints {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .endpoint-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .endpoint-btn.active {
+    background: rgba(108,99,255,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Submit button */
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-primary .spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin: 0 auto;
+  }
+
+  .btn-primary.loading .btn-text { display: none; }
+  .btn-primary.loading .spinner { display: block; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Response panel */
+  .response-panel {
+    margin-top: 24px;
+    display: none;
+  }
+
+  .response-panel.visible { display: block; }
+
+  .response-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  .status-dot.success { background: var(--success); }
+  .status-dot.error { background: var(--error); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .status-code {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .status-code.ok { background: rgba(0,214,143,0.15); color: var(--success); }
+  .status-code.fail { background: rgba(255,56,96,0.15); color: var(--error); }
+
+  .status-text { font-size: 13px; color: var(--muted); }
+
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  /* Link result */
+  .link-result {
+    display: none;
+    margin-top: 16px;
+  }
+
+  .link-result.visible { display: block; }
+
+  .payment-link-box {
+    background: rgba(0,214,143,0.06);
+    border: 1px solid rgba(0,214,143,0.2);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .payment-link-box .link-url {
+    font-size: 13px;
+    color: var(--success);
+    word-break: break-all;
+    flex: 1;
+  }
+
+  .btn-open {
+    padding: 10px 20px;
+    background: var(--success);
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-open:hover { opacity: 0.85; }
+
+  /* Request preview */
+  .request-preview {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    display: none;
+  }
+
+  .request-preview.visible { display: block; }
+
+  .req-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .method-tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(108,99,255,0.2);
+    color: var(--accent);
+  }
+
+  .req-url { font-size: 12px; color: var(--muted); }
+
+  /* History */
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .history-item:last-child { border-bottom: none; }
+  .history-time { color: var(--muted); min-width: 70px; }
+  .history-endpoint { color: var(--accent); flex: 1; }
+  .history-status { padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+  .history-status.ok { background: rgba(0,214,143,0.15); color: var(--success); }
+  .history-status.fail { background: rgba(255,56,96,0.15); color: var(--error); }
+
+  #history-list .empty {
+    color: var(--muted);
+    font-size: 12px;
+    padding: 16px 0;
+    text-align: center;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">N</div>
+    <div class="header-text">
+      <h1>Nreservi × Nomod API</h1>
+      <p>Test d'intégration paiement Booking.com</p>
+    </div>
+    <span class="badge badge-test">SANDBOX</span>
+  </header>
+
+  <!-- API Config -->
+  <div class="section-title">Configuration API</div>
+  <div class="card">
+    <div class="field">
+      <label>Clé API Nomod</label>
+      <div class="api-key-row">
+        <input type="password" id="api-key" placeholder="sk_live_..." value="sk_live_wj1QW1bl.qThCAlXhCAjYmVEjq9P6RWIJ2w0vvNmQ">
+        <button class="endpoint-btn" onclick="toggleApiKey()">👁</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Endpoint selector -->
+  <div class="section-title">Endpoint</div>
+  <div class="endpoints">
+    <button class="endpoint-btn active" onclick="setEndpoint('links', this)">/v1/links</button>
+    <button class="endpoint-btn" onclick="setEndpoint('checkout', this)">/v1/checkout</button>
+    <button class="endpoint-btn" onclick="setEndpoint('list', this)">GET /v1/links</button>
+  </div>
+
+  <!-- Réservation Form -->
+  <div class="section-title">Données Réservation</div>
+  <div class="card">
+    <div class="form-grid">
+      <div class="field full">
+        <label>Hôtel</label>
+        <input type="text" id="hotel" value="El Ghanami Hotel">
+      </div>
+      <div class="field full">
+        <label>Client (guest)</label>
+        <input type="text" id="guest" value="Mauro Italiano">
+      </div>
+      <div class="field">
+        <label>Check-in</label>
+        <input type="date" id="checkin" value="2026-03-21">
+      </div>
+      <div class="field">
+        <label>Check-out</label>
+        <input type="date" id="checkout" value="2026-03-22">
+      </div>
+      <div class="field">
+        <label>Montant</label>
+        <input type="number" id="amount" value="9335">
+      </div>
+      <div class="field">
+        <label>Devise</label>
+        <select id="currency">
+          <option value="DZD" selected>DZD — Dinar Algérien</option>
+          <option value="AED">AED — Dirham</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="USD">USD — Dollar</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label>Référence Booking</label>
+        <input type="text" id="booking-ref" value="5158280562">
+      </div>
+    </div>
+
+    <!-- Request preview -->
+    <div class="request-preview visible" id="request-preview">
+      <div class="req-header">
+        <span class="method-tag">POST</span>
+        <span class="req-url" id="req-url-display">https://api.nomod.com/v1/links</span>
+      </div>
+      <pre id="body-preview">{}</pre>
+    </div>
+
+    <button class="btn-primary" id="submit-btn" onclick="sendRequest()">
+      <span class="btn-text">🚀 Envoyer la requête</span>
+      <span class="spinner"></span>
+    </button>
+  </div>
+
+  <!-- Response -->
+  <div class="response-panel" id="response-panel">
+    <div class="section-title">Réponse API</div>
+    <div class="card">
+      <div class="response-status">
+        <div class="status-dot" id="status-dot"></div>
+        <span class="status-code" id="status-code"></span>
+        <span class="status-text" id="status-text"></span>
+      </div>
+      <pre id="response-body"></pre>
+
+      <!-- Payment link result -->
+      <div class="link-result" id="link-result">
+        <div class="payment-link-box">
+          <span class="link-url" id="payment-link-url"></span>
+          <a class="btn-open" id="payment-link-open" href="#" target="_blank">Ouvrir ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="section-title">Historique des requêtes</div>
+  <div class="card">
+    <div id="history-list">
+      <div class="empty">Aucune requête envoyée</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let currentEndpoint = 'links';
+  const history = [];
+
+  function toggleApiKey() {
+    const input = document.getElementById('api-key');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  function setEndpoint(ep, btn) {
+    currentEndpoint = ep;
+    document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updatePreview();
+  }
+
+  function getBody() {
+    const hotel = document.getElementById('hotel').value;
+    const guest = document.getElementById('guest').value;
+    const checkin = document.getElementById('checkin').value;
+    const checkout = document.getElementById('checkout').value;
+    const amount = document.getElementById('amount').value;
+    const currency = document.getElementById('currency').value;
+    const ref = document.getElementById('booking-ref').value;
+
+    if (currentEndpoint === 'links') {
+      return {
+        reference_id: Date.now().toString(),
+        name: hotel,
+        note: `Booking ref: ${ref} | ${checkin} → ${checkout}`,
+        currency: currency,
+        items: [{ name: guest, price: parseFloat(amount), quantity: 1 }]
+      };
+    } else if (currentEndpoint === 'checkout') {
+      return {
+        reference_id: Date.now().toString(),
+        name: hotel,
+        note: `Booking ref: ${ref} | ${checkin} → ${checkout}`,
+        currency: currency,
+        items: [{ name: guest, amount: parseFloat(amount), quantity: 1 }]
+      };
+    }
+    return null;
+  }
+
+  function getUrl() {
+    if (currentEndpoint === 'list') return 'https://api.nomod.com/v1/links';
+    if (currentEndpoint === 'links') return 'https://api.nomod.com/v1/links';
+    return 'https://api.nomod.com/v1/checkout';
+  }
+
+  function updatePreview() {
+    const url = getUrl();
+    document.getElementById('req-url-display').textContent = url;
+    if (currentEndpoint !== 'list') {
+      document.getElementById('body-preview').textContent = JSON.stringify(getBody(), null, 2);
+    } else {
+      document.getElementById('body-preview').textContent = '// GET request — no body';
+    }
+  }
+
+  // Auto-update preview on input change
+  document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('input', updatePreview);
+  });
+
+  updatePreview();
+
+  async function sendRequest() {
+    const apiKey = document.getElementById('api-key').value;
+    if (!apiKey) { alert('Clé API manquante'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    const url = getUrl();
+    const method = currentEndpoint === 'list' ? 'GET' : 'POST';
+    const body = currentEndpoint !== 'list' ? getBody() : null;
+
+    const startTime = Date.now();
+
+    try {
+      const options = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-KEY': apiKey
+        }
+      };
+      if (body) options.body = JSON.stringify(body);
+
+      const response = await fetch(url, options);
+      const elapsed = Date.now() - startTime;
+      const data = await response.json();
+
+      // Show response
+      const panel = document.getElementById('response-panel');
+      panel.classList.add('visible');
+
+      const isOk = response.ok;
+      document.getElementById('status-dot').className = `status-dot ${isOk ? 'success' : 'error'}`;
+      document.getElementById('status-code').className = `status-code ${isOk ? 'ok' : 'fail'}`;
+      document.getElementById('status-code').textContent = response.status;
+      document.getElementById('status-text').textContent = `${response.statusText} — ${elapsed}ms`;
+      document.getElementById('response-body').textContent = JSON.stringify(data, null, 2);
+
+      // Extract payment link
+      const linkResult = document.getElementById('link-result');
+      const paymentUrl = data.short_url || data.url || data.payment_url || data.checkout_url;
+      if (isOk && paymentUrl) {
+        linkResult.classList.add('visible');
+        document.getElementById('payment-link-url').textContent = paymentUrl;
+        document.getElementById('payment-link-open').href = paymentUrl;
+      } else {
+        linkResult.classList.remove('visible');
+      }
+
+      // Add to history
+      addHistory(method, url, response.status, isOk);
+
+    } catch (err) {
+      const panel = document.getElementById('response-panel');
+      panel.classList.add('visible');
+      document.getElementById('status-dot').className = 'status-dot error';
+      document.getElementById('status-code').className = 'status-code fail';
+      document.getElementById('status-code').textContent = 'ERR';
+      document.getElementById('status-text').textContent = 'Erreur réseau (CORS ?)';
+      document.getElementById('response-body').textContent = err.toString() + '\n\n⚠️ Note: Les appels API depuis un navigateur peuvent être bloqués par CORS.\nUtilise plutôt n8n ou un serveur pour les appels en production.';
+      document.getElementById('link-result').classList.remove('visible');
+      addHistory(method, url, 0, false);
+    } finally {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  }
+
+  function addHistory(method, url, status, isOk) {
+    const list = document.getElementById('history-list');
+    const empty = list.querySelector('.empty');
+    if (empty) empty.remove();
+
+    const now = new Date();
+    const time = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const endpoint = url.replace('https://api.nomod.com', '');
+
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML = `
+      <span class="history-time">${time}</span>
+      <span class="history-endpoint">${method} ${endpoint}</span>
+      <span class="history-status ${isOk ? 'ok' : 'fail'}">${status || 'ERR'}</span>
+    `;
+    list.insertBefore(item, list.firstChild);
+  }
+</script>
+</body>
+</html>
